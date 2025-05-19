@@ -13,6 +13,8 @@ basically just a library I made for fun after dealing with a lot of MMIO bitfiel
 ### Downsides
 - uses some new compiler features
     - types compatable: `__builtin_types_compatible_p` 
+- hacky use of preprocessor and macros (see `structbool.h`)
 - uses compiler features which are not in standard but are allowed in gcc/clang
 - designed for 64 bit architectures which tolerate 8/16/32/64 bit accesses 
 - not yet tested much (will probably test more if/when I decide to use it)
+
