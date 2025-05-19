@@ -17,6 +17,11 @@ basically just a library I made for fun after dealing with a lot of MMIO bitfiel
 - uses compiler features which are not in standard but are allowed in gcc/clang
 - designed for 64 bit architectures which tolerate 8/16/32/64 bit accesses 
 - not yet tested much (will probably test more if/when I decide to use it)
+### TODO
+- test more
+- Implement reads/writes split across alignment boundaries (ie: via multiple reads/writes)
+- Implement better methods to describe MMIO which is Read only/write only or has different definitions of read vs write
+    - Add option to provide backing store for writes
 ## Example
 ### Intel Interrupt Descriptor Table Entry 
 ``` c
