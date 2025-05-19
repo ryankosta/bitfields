@@ -31,8 +31,8 @@ DECLARE_BIT_TYPE(intel_dma_bit_t,1,0,0,0,0);
 DECLARE_BIT_TYPE(intel_dma_flag_t,1,0,1,0,0);
 
 /* no read/write size min, volatile, little endian */
-DECLARE_BIT_TYPE(intel_mmio_bit_t,1,0,0,0,0);
-DECLARE_BIT_TYPE(intel_mmio_flag_t,1,0,1,0,0);
+DECLARE_BIT_TYPE(intel_mmio_bit_t,1,1,0,0,0);
+DECLARE_BIT_TYPE(intel_mmio_flag_t,1,1,1,0,0);
 
 /* define bitfields for idt entry */
 DECLARE_BITS(struct idt_entry) {
