@@ -1,18 +1,20 @@
 #ifndef BITFIELDS_H
 #define BITFIELDS_H
-#include "bitfield_types.h"
-#include "structbool.h"
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include "bitfield_types.h"
+#include "panic.h"
+#include "structbool.h"
 //#include <stdio.h> //todo debug only
 //#include <inttypes.h> //todo debug only
 #define GEN_BITMASK(width) ((1ULL << (width)) - 1ULL)
 #define ACCESS_ONCE(x) (*(volatile __typeof__(x) *)&(x))
-#define MIN(a, b) ({ \
+#define MAX(a, b) ({ \
     __typeof__(a) _a = (a); \
     __typeof__(b) _b = (b); \
-    _a < _b ? _a : _b; \
+    _a > _b ? _a : _b; \
 })
 /* main accessor */
 #define declare_read_bitfield_offset(bits) \
@@ -65,68 +67,72 @@ declare_write_bitfield_offset_volatile(64)
 
 /* does access tear across alignment boundary */
 #define tear(offbits,sz,divisor) offbits/divisor != (offbits+sz)/divisor
-static inline __attribute__((always_inline)) uint64_t _read_bitfield(uint8_t *base, uint64_t offbits, uint64_t sz, bool swap, bool vol,uint8_t tearmin){
+static inline __attribute__((always_inline)) uint64_t _read_bitfield(uint8_t *base, uint64_t offbits, uint64_t sz, bool swap, bool vol,uint8_t accessmin){
 	uint64_t val;
 	base += offbits/8;
-	if(sz <= 8 && !tear(offbits,sz,MIN(8llu,tearmin))){ 
+	if(MAX(sz,accessmin) <= 8 && !tear(offbits,sz,8llu)){ 
 		if(vol){
 			val = _read_bitfield_offset_8_volatile((void*)base,offbits,sz); 
 		}else{
 			val = _read_bitfield_offset_8((void*)base,offbits,sz); 
 		}
-	} else if(sz <= 16 && !tear(offbits,sz,MIN(16llu,tearmin))){ 
+	} else if(MAX(sz,accessmin) <= 16 && !tear(offbits,sz,16llu)){ 
 		if(vol){
 			val = _read_bitfield_offset_16_volatile((void*)base,offbits,sz);
 		}else {
 			val = _read_bitfield_offset_16((void*)base,offbits,sz);
 		}
 		if(swap) val = __builtin_bswap16(val);
-	} else if(sz <= 32 && !tear(offbits,sz,MIN(32llu,tearmin))){ 
+	} else if(MAX(sz,accessmin) <= 32 && !tear(offbits,sz,32llu)){ 
 		if(vol){
 			val = _read_bitfield_offset_32_volatile((void*)base,offbits,sz);
 		}else {
 			val = _read_bitfield_offset_32((void*)base,offbits,sz);
 		}
 		if(swap) val = __builtin_bswap32(val);
-	} else if(sz <= 64 && !tear(offbits,sz,MIN(64llu,tearmin))){
+	} else if(MAX(sz,accessmin) <= 64 && !tear(offbits,sz,64llu)){
 		if(vol){
 			val = _read_bitfield_offset_64_volatile((void*)base,offbits,sz);
 		}else {
 			val = _read_bitfield_offset_64((void*)base,offbits,sz);
 		}
 		if(swap) val = __builtin_bswap64(val);
+	} else {
+		panic("split read unimplemented\n");
 	}
 	return val;
 }
-static inline __attribute__((always_inline)) void _write_bitfield(uint8_t *base, uint64_t val, uint64_t offbits, uint64_t sz, bool swap, bool vol,uint8_t tearmin){
+static inline __attribute__((always_inline)) void _write_bitfield(uint8_t *base, uint64_t val, uint64_t offbits, uint64_t sz, bool swap, bool vol,uint8_t accessmin){
 	base += offbits/8;
-	if(sz <= 8 && !tear(offbits,sz,MIN(8llu,tearmin))){ 
+	if(MAX(sz,accessmin) <= 8 && !tear(offbits,sz,8llu)){ 
 		if(vol){
 			_write_bitfield_offset_8_volatile((void*)base,val,offbits,sz); 
 		}else{
 			_write_bitfield_offset_8((void*)base,val,offbits,sz); 
 		}
-	}else if(sz <= 16 && !tear(offbits,sz,MIN(16llu,tearmin))){ 
+	}else if(MAX(sz,accessmin) <= 16 && !tear(offbits,sz,16llu)){ 
 		if(swap) val = __builtin_bswap16(val);
 		if(vol){
 			_write_bitfield_offset_16_volatile((void*)base,val,offbits,sz);
 		}else {
 			_write_bitfield_offset_16((void*)base,val,offbits,sz);
 		}
-	}else if(sz <= 32 && !tear(offbits,sz,MIN(32llu,tearmin))){ 
+	}else if(MAX(sz,accessmin) <= 32 && !tear(offbits,sz,32llu)){ 
 		if(swap) val = __builtin_bswap32(val);
 		if(vol){
 			_write_bitfield_offset_32_volatile((void*)base,val,offbits,sz);
 		}else {
 			_write_bitfield_offset_32((void*)base,val,offbits,sz);
 		}
-	}else if(sz <= 64 && !tear(offbits,sz,MIN(64llu,tearmin))){ 
+	}else if(MAX(sz,accessmin) <= 64 && !tear(offbits,sz,64llu)){ 
 		if(swap) val = __builtin_bswap64(val);
 		if(vol){
 			_write_bitfield_offset_64_volatile((void*)base,val,offbits,sz);
 		}else {
 			_write_bitfield_offset_64((void*)base,val,offbits,sz);
 		}
+	} else {
+		panic("split write unimplemented\n");
 	}
 }
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
